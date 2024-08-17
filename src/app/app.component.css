@@ -1,0 +1,10 @@
+/* Add custom styles for the AppComponent here */
+.container {
+    max-width: 1200px; /* Adjust as needed */
+    margin: 0 auto;
+  }
+  
+  body {
+    font-family: Arial, sans-serif; /* Example font family */
+  }
+  

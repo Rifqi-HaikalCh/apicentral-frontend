@@ -1,0 +1,25 @@
+/* Add custom styles for the dialog here */
+.mat-dialog-title {
+    font-weight: bold;
+  }
+  
+  .mat-dialog-content {
+    padding: 16px;
+  }
+  
+  .mat-dialog-actions {
+    padding: 8px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  

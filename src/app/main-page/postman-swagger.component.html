@@ -1,0 +1,75 @@
+<div class="flex justify-between items-center mb-4">
+    <!-- Button to open dialog -->
+    <button mat-raised-button class="bg-blue-500 text-white" (click)="openDialog()"> 
+      <img src="images/icons/install-svgrepo-com.svg" alt="Import" width="20" height="20" class="import-icon">
+      Import Swagger
+    </button>
+  
+    <!-- Search Bar -->
+    <mat-form-field class="search-bar w-3/5">
+      <mat-label>Search</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Search API">
+    </mat-form-field>
+  </div>
+  
+<!-- Table to Display API Swagger -->
+<section class="example-container mat-elevation-z8" tabindex="0">
+    <table mat-table [dataSource]="dataSource" matSort class="mat-table">
+  
+      <!-- NO Column -->
+      <ng-container matColumnDef="no">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> No. </th>
+        <td mat-cell *matCellDef="let api; let index = index"> {{ index + 1 }} </td>
+      </ng-container>
+  
+      <!-- PROJECT NAME Column -->
+      <ng-container matColumnDef="projectName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Project Name </th>
+        <td mat-cell *matCellDef="let api"> {{ api.projectName }} </td>
+      </ng-container>
+  
+      <!-- API NAME Column -->
+      <ng-container matColumnDef="apiName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> API Name </th>
+        <td mat-cell *matCellDef="let api"> {{ api.apiName }} </td>
+      </ng-container>
+  
+      <!-- API URL Column -->
+      <ng-container matColumnDef="apiUrl">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> API URL </th>
+        <td mat-cell *matCellDef="let api"> {{ api.apiUrl }} </td>
+      </ng-container>
+  
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Actions </th>
+        <td mat-cell *matCellDef="let api">
+          <button mat-button (click)="onEdit(api)" class="edit-button">Edit</button>
+          <button mat-button (click)="onDownload(api)" class="download-button">Download</button>
+        </td>
+      </ng-container>
+  
+      <!-- Header and Row Definition -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </section>
+  
+  
+  
+      
+<!-- Existing template content -->
+
+  
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-left">
+                <p>© PT Federal International Finance "FIFGROUP" 2024, Berizin dan diawasi oleh Otoritas Jasa Keuangan</p>
+            </div>
+            <div class="footer-right">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <span class="separator">|</span>
+                <a href="#" class="footer-link">Terms of Services</a>
+            </div>
+        </div>
+    </footer>

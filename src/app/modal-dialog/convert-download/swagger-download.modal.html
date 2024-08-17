@@ -1,0 +1,11 @@
+<ng-template #deleteDialogTemplate let-dialogRef="dialogRef">
+    <h2 mat-dialog-title>Confirm Download</h2>
+    <mat-dialog-content>
+      <p>Are you sure you want to download this API?</p>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+        <button mat-button (click)="close(dialogRef)">Cancel</button>
+        <button mat-raised-button color="warn" (click)="confirmDownload(dialogRef)">Download</button>
+      </mat-dialog-actions>
+      
+  </ng-template>
