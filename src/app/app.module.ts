@@ -26,15 +26,12 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { SwaggerImportDialogComponent } from './modal-dialog/converter-add-edit/swagger-import-dialog.component';
-import { SwaggerDownloadModalComponent } from './modal-dialog/convert-download/swagger-download.modal';
+
 
 @NgModule({
     declarations: [
         AppComponent,
-        PostmanSwaggerComponent,
-        SwaggerImportDialogComponent,
-        SwaggerDownloadModalComponent
+        PostmanSwaggerComponent
     ],
     imports: [
         BrowserModule,

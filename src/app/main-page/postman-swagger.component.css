@@ -70,3 +70,16 @@
     width: 100%;
   }
       
+  .form-field-container {
+    margin-bottom: 16px;
+  }
+  
+  .form-field {
+    width: 100%;
+  }
+  
+  .dialog-actions {
+    display: flex;
+    justify-content: space-between;
+  }
+  

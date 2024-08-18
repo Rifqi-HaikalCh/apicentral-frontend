@@ -1,8 +1,8 @@
 <div class="flex justify-between items-center mb-4">
     <!-- Button to open dialog -->
-    <button mat-raised-button class="bg-blue-500 text-white" (click)="openDialog()"> 
+    <button mat-raised-button class="bg-blue-500 text-white px-4 py-2 flex items-center space-x-2" (click)="openDialog(true)">
       <img src="images/icons/install-svgrepo-com.svg" alt="Import" width="20" height="20" class="import-icon">
-      Import Swagger
+      <span>Import Swagger</span>
     </button>
   
     <!-- Search Bar -->
@@ -12,64 +12,156 @@
     </mat-form-field>
   </div>
   
-<!-- Table to Display API Swagger -->
-<section class="example-container mat-elevation-z8" tabindex="0">
-    <table mat-table [dataSource]="dataSource" matSort class="mat-table">
+  <!-- Dialog Template for Adding/Editing API -->
+  <ng-template #dialogTemplate>
+    <div class="p-6 bg-white rounded-lg shadow-lg">
+      <h2 mat-dialog-title class="text-xl font-semibold mb-4">{{ isNew ? 'Add Your Collection' : 'Update Your API' }}</h2>
+      <mat-dialog-content>
+        <form [formGroup]="selectedApiForm" (ngSubmit)="onSave()" class="space-y-6">
+          <mat-form-field appearance="fill" class="w-full">
+            <mat-label>Project Name</mat-label>
+            <input matInput formControlName="projectName" placeholder="Enter project name" required>
+            <mat-error *ngIf="selectedApiForm.get('projectName')?.hasError('required')">
+              Project Name is required
+            </mat-error>
+          </mat-form-field>
   
-      <!-- NO Column -->
-      <ng-container matColumnDef="no">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> No. </th>
-        <td mat-cell *matCellDef="let api; let index = index"> {{ index + 1 }} </td>
-      </ng-container>
+          <mat-form-field appearance="fill" class="w-full">
+            <mat-label>API Name</mat-label>
+            <input matInput formControlName="apiName" placeholder="Enter API name" required>
+            <mat-error *ngIf="selectedApiForm.get('apiName')?.hasError('required')">
+              API Name is required
+            </mat-error>
+          </mat-form-field>
   
-      <!-- PROJECT NAME Column -->
-      <ng-container matColumnDef="projectName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Project Name </th>
-        <td mat-cell *matCellDef="let api"> {{ api.projectName }} </td>
-      </ng-container>
+          <mat-form-field appearance="fill" class="w-full">
+            <mat-label>API URL</mat-label>
+            <input matInput formControlName="apiUrl" placeholder="Enter API URL" required>
+            <mat-error *ngIf="selectedApiForm.get('apiUrl')?.hasError('required')">
+              API URL is required
+            </mat-error>
+          </mat-form-field>
   
-      <!-- API NAME Column -->
-      <ng-container matColumnDef="apiName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> API Name </th>
-        <td mat-cell *matCellDef="let api"> {{ api.apiName }} </td>
-      </ng-container>
+          <!-- File Input -->
+          <div class="mt-4" *ngIf="isNew">
+            <mat-form-field appearance="fill" class="w-full">
+              <mat-label>Import Postman Collection</mat-label>
+              <input type="file" (change)="onFileSelected($event)">
+            </mat-form-field>
+          </div>
+        </form>
+      </mat-dialog-content>
+      <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
+        <button mat-button class="text-gray-500" (click)="closeDialog()">Cancel</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="selectedApiForm.invalid || (!selectedFile && isNew)">Save</button>
+      </mat-dialog-actions>
+    </div>
+  </ng-template>
   
-      <!-- API URL Column -->
-      <ng-container matColumnDef="apiUrl">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> API URL </th>
-        <td mat-cell *matCellDef="let api"> {{ api.apiUrl }} </td>
-      </ng-container>
+  <!-- Dialog Template for Confirm Download -->
+  <ng-template #deleteDialogTemplate let-dialogRef="dialogRef">
+    <div class="p-6 bg-white rounded-lg shadow-lg">
+      <h2 mat-dialog-title class="text-xl font-semibold mb-4">Confirm Download</h2>
+      <mat-dialog-content>
+        <p>Are you sure you want to download this API?</p>
+      </mat-dialog-content>
+      <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
+        <button mat-button class="text-gray-500" (click)="close(dialogRef)">Cancel</button>
+        <button mat-raised-button color="warn" (click)="confirmDownload(dialogRef)">Download</button>
+      </mat-dialog-actions>
+    </div>
+  </ng-template>
   
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef> Actions </th>
-        <td mat-cell *matCellDef="let api">
-          <button mat-button (click)="onEdit(api)" class="edit-button">Edit</button>
-          <button mat-button (click)="onDownload(api)" class="download-button">Download</button>
-        </td>
-      </ng-container>
+  <!-- Table to Display API Data -->
+  <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8 w-full">
   
-      <!-- Header and Row Definition -->
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-  </section>
+    <!-- NO Column -->
+    <ng-container matColumnDef="no">
+      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">No</th>
+      <td mat-cell *matCellDef="let element; let index = index" class="px-4 py-2">
+        {{ index + 1 }}
+      </td>
+    </ng-container>
   
+    <!-- Project Name Column -->
+    <ng-container matColumnDef="projectName">
+      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">Project Name</th>
+      <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.projectName }}</td>
+    </ng-container>
   
+    <!-- API Name Column -->
+    <ng-container matColumnDef="apiName">
+      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">API Name</th>
+      <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.apiName }}</td>
+    </ng-container>
   
-      
-<!-- Existing template content -->
-
+    <!-- URL Column -->
+    <ng-container matColumnDef="apiUrl">
+      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">URL</th>
+      <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.apiUrl }}</td>
+    </ng-container>
   
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-left">
-                <p>© PT Federal International Finance "FIFGROUP" 2024, Berizin dan diawasi oleh Otoritas Jasa Keuangan</p>
-            </div>
-            <div class="footer-right">
-                <a href="#" class="footer-link">Privacy Policy</a>
-                <span class="separator">|</span>
-                <a href="#" class="footer-link">Terms of Services</a>
-            </div>
+    <!-- Action Buttons Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">Actions</th>
+      <td mat-cell *matCellDef="let api" class="px-4 py-2 flex space-x-2">
+        <button mat-icon-button (click)="onEdit(api)" title="Edit API" class="text-blue-500">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="onDownload(api)" title="Download API" class="text-green-500">
+          <mat-icon>cloud_download</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+  
+    <!-- Expanded Content Column -->
+    <ng-container matColumnDef="expandedDetail">
+      <td mat-cell *matCellDef="let api" [attr.colspan]="displayedColumns.length">
+        <div class="example-element-detail" [@detailExpand]="api == expandedElement ? 'expanded' : 'collapsed'">
+          <div class="inner-table mat-elevation-z8" *ngIf="api.methods">
+            <table mat-table [dataSource]="api.methods">
+              <ng-container matColumnDef="method">
+                <th mat-header-cell *matHeaderCellDef> Method </th>
+                <td mat-cell *matCellDef="let method"> {{ method.method }} </td>
+              </ng-container>
+              <ng-container matColumnDef="url">
+                <th mat-header-cell *matHeaderCellDef> URL </th>
+                <td mat-cell *matCellDef="let method"> {{ method.path }} </td>
+              </ng-container>
+              <ng-container matColumnDef="edit">
+                <th mat-header-cell *matHeaderCellDef> Edit </th>
+                <td mat-cell *matCellDef="let method">
+                  <button mat-icon-button (click)="editMethod(method)" class="text-blue-500">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="['method', 'url', 'edit']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['method', 'url', 'edit'];"></tr>
+            </table>
+          </div>
         </div>
-    </footer>
+      </td>
+    </ng-container>
+  
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let api; columns: displayedColumns;"
+        class="example-element-row"
+        [class.example-expanded-row]="expandedElement === api"
+        (click)="expandedElement = expandedElement === api ? null : api">
+    </tr>
+    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+  </table>
+  
+  <!-- Footer -->
+  <footer class="footer mt-6">
+    <div class="container mx-auto py-4 px-6 flex justify-between text-gray-600 text-sm">
+      <p>© PT Federal International Finance "FIFGROUP" 2024, Berizin dan diawasi oleh Otoritas Jasa Keuangan</p>
+      <div>
+        <a href="#" class="footer-link text-blue-500 hover:underline">Privacy Policy</a>
+        <span class="mx-2">|</span>
+        <a href="#" class="footer-link text-blue-500 hover:underline">Terms of Services</a>
+      </div>
+    </div>
+  </footer>
+  
