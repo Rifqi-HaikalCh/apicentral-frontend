@@ -26,7 +26,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTabsModule } from '@angular/material/tabs';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @NgModule({
     declarations: [
@@ -37,6 +37,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
         BrowserModule,
         BrowserAnimationsModule,
         ReactiveFormsModule,
+        MatProgressBarModule,
         HttpClientModule,
         RouterModule.forRoot([]),
         AppRoutingModule,

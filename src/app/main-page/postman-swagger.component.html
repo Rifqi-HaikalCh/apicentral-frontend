@@ -1,167 +1,204 @@
-<div class="flex justify-between items-center mb-4">
-    <!-- Button to open dialog -->
-    <button mat-raised-button class="bg-blue-500 text-white px-4 py-2 flex items-center space-x-2" (click)="openDialog(true)">
-      <img src="images/icons/install-svgrepo-com.svg" alt="Import" width="20" height="20" class="import-icon">
-      <span>Import Swagger</span>
-    </button>
-  
-    <!-- Search Bar -->
-    <mat-form-field class="search-bar w-3/5">
-      <mat-label>Search</mat-label>
-      <input matInput (keyup)="applyFilter($event)" placeholder="Search API">
-    </mat-form-field>
+<div class="image-container">
+  <img src="images/icons/fifgroup.png" alt="FIFGROUP Logo" class="centered-image">
+</div>
+
+<mat-tab-group class="bg-white p-5 shadow-md sticky top-0 z-50" style="height: 10%;">
+<mat-tab label="Convert to Swagger">
+  <div class="flex flex-col items-center justify-center h-screen space-y-4">
+    
+    <!-- Heading -->
+    <div class="text-center">
+      <h1 class="text-2xl font-semibold">Swagger File Converter</h1>
+      <p class="text-gray-600">Convert Postman JSON files to Swagger format easily</p>
+    </div>
+    
+    <div class="flex w-full max-w-xl items-center">
+      <mat-form-field appearance="outline" class="modern-field flex-grow">
+        <!-- <mat-label>Select JSON File</mat-label> -->
+        <input matInput readonly [value]="selectedFile?.name || 'No file chosen'">
+        <button mat-icon-button matSuffix (click)="fileInput.click()" aria-label="Attach file">
+          <mat-icon>attach_file</mat-icon>
+        </button>
+      </mat-form-field>
+      
+            
+      <!-- Hidden File Input -->
+      <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" accept=".json">
+
+      <!-- Convert Button -->
+      <button mat-raised-button class="convert-button" type="button" (click)="uploadFile()" [disabled]="!selectedFile">
+        Convert
+      </button>
+
+    </div>
+    <!-- Progress bar -->
+    <mat-progress-bar mode="indeterminate" *ngIf="showProgressBar" class="w-full max-w-xl"></mat-progress-bar>
   </div>
-  
-  <!-- Dialog Template for Adding/Editing API -->
-  <ng-template #dialogTemplate>
-    <div class="p-6 bg-white rounded-lg shadow-lg">
-      <h2 mat-dialog-title class="text-xl font-semibold mb-4">{{ isNew ? 'Add Your Collection' : 'Update Your API' }}</h2>
-      <mat-dialog-content>
-        <form [formGroup]="selectedApiForm" (ngSubmit)="onSave()" class="space-y-6">
-          <mat-form-field appearance="fill" class="w-full">
-            <mat-label>Project Name</mat-label>
-            <input matInput formControlName="projectName" placeholder="Enter project name" required>
-            <mat-error *ngIf="selectedApiForm.get('projectName')?.hasError('required')">
-              Project Name is required
-            </mat-error>
-          </mat-form-field>
-  
-          <mat-form-field appearance="fill" class="w-full">
-            <mat-label>API Name</mat-label>
-            <input matInput formControlName="apiName" placeholder="Enter API name" required>
-            <mat-error *ngIf="selectedApiForm.get('apiName')?.hasError('required')">
-              API Name is required
-            </mat-error>
-          </mat-form-field>
-  
-          <mat-form-field appearance="fill" class="w-full">
-            <mat-label>API URL</mat-label>
-            <input matInput formControlName="apiUrl" placeholder="Enter API URL" required>
-            <mat-error *ngIf="selectedApiForm.get('apiUrl')?.hasError('required')">
-              API URL is required
-            </mat-error>
-          </mat-form-field>
-  
-          <!-- File Input -->
-          <div class="mt-4" *ngIf="isNew">
-            <mat-form-field appearance="fill" class="w-full">
-              <mat-label>Import Postman Collection</mat-label>
-              <input type="file" (change)="onFileSelected($event)">
-            </mat-form-field>
-          </div>
-        </form>
-      </mat-dialog-content>
-      <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
-        <button mat-button class="text-gray-500" (click)="closeDialog()">Cancel</button>
-        <button mat-raised-button color="primary" type="submit" [disabled]="selectedApiForm.invalid || (!selectedFile && isNew)">Save</button>
-      </mat-dialog-actions>
-    </div>
-  </ng-template>
-  
-  <!-- Dialog Template for Confirm Download -->
-  <ng-template #deleteDialogTemplate let-dialogRef="dialogRef">
-    <div class="p-6 bg-white rounded-lg shadow-lg">
-      <h2 mat-dialog-title class="text-xl font-semibold mb-4">Confirm Download</h2>
-      <mat-dialog-content>
-        <p>Are you sure you want to download this API?</p>
-      </mat-dialog-content>
-      <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
-        <button mat-button class="text-gray-500" (click)="close(dialogRef)">Cancel</button>
-        <button mat-raised-button color="warn" (click)="confirmDownload(dialogRef)">Download</button>
-      </mat-dialog-actions>
-    </div>
-  </ng-template>
-  
-  <!-- Table to Display API Data -->
-  <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8 w-full">
-  
-    <!-- NO Column -->
-    <ng-container matColumnDef="no">
-      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">No</th>
-      <td mat-cell *matCellDef="let element; let index = index" class="px-4 py-2">
-        {{ index + 1 }}
-      </td>
-    </ng-container>
-  
-    <!-- Project Name Column -->
-    <ng-container matColumnDef="projectName">
-      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">Project Name</th>
-      <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.projectName }}</td>
-    </ng-container>
-  
-    <!-- API Name Column -->
-    <ng-container matColumnDef="apiName">
-      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">API Name</th>
-      <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.apiName }}</td>
-    </ng-container>
-  
-    <!-- URL Column -->
-    <ng-container matColumnDef="apiUrl">
-      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">URL</th>
-      <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.apiUrl }}</td>
-    </ng-container>
-  
-    <!-- Action Buttons Column -->
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef class="px-4 py-2">Actions</th>
-      <td mat-cell *matCellDef="let api" class="px-4 py-2 flex space-x-2">
-        <button mat-icon-button (click)="onEdit(api)" title="Edit API" class="text-blue-500">
-          <mat-icon>edit</mat-icon>
+</mat-tab>
+
+
+
+  <!-- SLIDE TAB 2 -->
+  <mat-tab label="API Documentation List ">
+<br>
+    <div class="flex justify-between items-center mb-4">
+      
+        <!-- Button to open Add New API dialog -->
+        <button mat-raised-button class="bg-blue-500 text-white px-4 py-2 flex items-center space-x-2" (click)="openDialog(true)">
+          <span>Add New API</span>
         </button>
-        <button mat-icon-button (click)="onDownload(api)" title="Download API" class="text-green-500">
-          <mat-icon>cloud_download</mat-icon>
-        </button>
-      </td>
-    </ng-container>
-  
-    <!-- Expanded Content Column -->
-    <ng-container matColumnDef="expandedDetail">
-      <td mat-cell *matCellDef="let api" [attr.colspan]="displayedColumns.length">
-        <div class="example-element-detail" [@detailExpand]="api == expandedElement ? 'expanded' : 'collapsed'">
-          <div class="inner-table mat-elevation-z8" *ngIf="api.methods">
-            <table mat-table [dataSource]="api.methods">
-              <ng-container matColumnDef="method">
-                <th mat-header-cell *matHeaderCellDef> Method </th>
-                <td mat-cell *matCellDef="let method"> {{ method.method }} </td>
-              </ng-container>
-              <ng-container matColumnDef="url">
-                <th mat-header-cell *matHeaderCellDef> URL </th>
-                <td mat-cell *matCellDef="let method"> {{ method.path }} </td>
-              </ng-container>
-              <ng-container matColumnDef="edit">
-                <th mat-header-cell *matHeaderCellDef> Edit </th>
-                <td mat-cell *matCellDef="let method">
-                  <button mat-icon-button (click)="editMethod(method)" class="text-blue-500">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="['method', 'url', 'edit']"></tr>
-              <tr mat-row *matRowDef="let row; columns: ['method', 'url', 'edit'];"></tr>
-            </table>
-          </div>
-        </div>
-      </td>
-    </ng-container>
-  
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let api; columns: displayedColumns;"
-        class="example-element-row"
-        [class.example-expanded-row]="expandedElement === api"
-        (click)="expandedElement = expandedElement === api ? null : api">
-    </tr>
-    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
-  </table>
-  
-  <!-- Footer -->
-  <footer class="footer mt-6">
-    <div class="container mx-auto py-4 px-6 flex justify-between text-gray-600 text-sm">
-      <p>© PT Federal International Finance "FIFGROUP" 2024, Berizin dan diawasi oleh Otoritas Jasa Keuangan</p>
-      <div>
-        <a href="#" class="footer-link text-blue-500 hover:underline">Privacy Policy</a>
-        <span class="mx-2">|</span>
-        <a href="#" class="footer-link text-blue-500 hover:underline">Terms of Services</a>
+      
+<!-- Search Bar -->
+<mat-form-field class="search-bar w-full max-w-md">
+  <mat-label>Search</mat-label>
+  <input matInput (keyup)="applyFilter($event)" placeholder="Search API">
+  <button mat-icon-button matSuffix (click)="applyFilter($event)">
+    <mat-icon>search</mat-icon>
+    <span class="sr-only">Search</span>
+  </button>
+</mat-form-field>
+
+        
       </div>
-    </div>
-  </footer>
-  
+      
+      <!-- Dialog Template for Adding/Editing API -->
+      <ng-template #dialogTemplate>
+        <div class="p-6 bg-white rounded-lg shadow-lg">
+          <h2 mat-dialog-title class="text-xl font-semibold mb-4">{{ isNew ? 'Add Your API' : 'Update Your API' }}</h2>
+          <mat-dialog-content>
+            <form [formGroup]="selectedApiForm" (ngSubmit)="onSave()" class="space-y-6">
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>Project Name</mat-label>
+                <input matInput formControlName="projectName" placeholder="Enter project name" required>
+                <mat-error *ngIf="selectedApiForm.get('projectName')?.hasError('required')">
+                  Project Name is required
+                </mat-error>
+              </mat-form-field>
+      
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>API Name</mat-label>
+                <input matInput formControlName="apiName" placeholder="Enter API name" required>
+                <mat-error *ngIf="selectedApiForm.get('apiName')?.hasError('required')">
+                  API Name is required
+                </mat-error>
+              </mat-form-field>
+      
+              <mat-form-field appearance="fill" class="w-full">
+                <mat-label>API URL</mat-label>
+                <input matInput formControlName="apiUrl" placeholder="Enter API URL" required>
+                <mat-error *ngIf="selectedApiForm.get('apiUrl')?.hasError('required')">
+                  API URL is required
+                </mat-error>
+              </mat-form-field>
+            </form>
+          </mat-dialog-content>
+          <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
+            <button mat-button class="text-gray-500" (click)="closeDialog()">Cancel</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="selectedApiForm.invalid">Save</button>
+          </mat-dialog-actions>
+        </div>
+      </ng-template>
+      
+      <!-- Import Dialog Template
+      <ng-template #importDialogTemplate>
+        <div class="p-6 bg-white rounded-lg shadow-lg">
+          <h2 mat-dialog-title class="text-xl font-semibold mb-4">Import Postman Collection</h2>
+          <mat-dialog-content>
+            <mat-form-field appearance="fill" class="w-full">
+              <mat-label>Select JSON File</mat-label>
+              <input matInput readonly [value]="selectedFile?.name || 'No file chosen'">
+              <button mat-icon-button matSuffix (click)="fileInput.click()">
+                <mat-icon>attach_file</mat-icon>
+              </button>
+            </mat-form-field>
+            <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" accept=".json">
+            <mat-progress-bar mode="indeterminate" *ngIf="showProgressBar"></mat-progress-bar>
+          </mat-dialog-content>
+          <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
+            <button mat-button class="text-gray-500" (click)="closeDialog()">Cancel</button>
+            <button mat-raised-button color="primary" type="button" (click)="uploadFile()" [disabled]="!selectedFile">Submit</button>
+          </mat-dialog-actions>
+        </div>
+      </ng-template> -->
+      
+      <!-- Confirm Download Dialog Template -->
+      <ng-template #confirmDownloadTemplate>
+        <div class="p-6 bg-white rounded-lg shadow-lg">
+          <h2 mat-dialog-title class="text-xl font-semibold mb-4">Confirm Download</h2>
+          <mat-dialog-content>
+            <p>Conversion completed. Do you want to download the Swagger JSON file?</p>
+          </mat-dialog-content>
+          <mat-dialog-actions class="flex justify-end space-x-4 mt-6">
+            <button mat-button class="text-gray-500" (click)="closeDialog()">Cancel</button>
+            <button mat-raised-button color="primary" (click)="downloadJson()">Download</button>
+          </mat-dialog-actions>
+        </div>
+      </ng-template>
+      
+      <!-- Table to Display API Data -->
+      <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8 w-full">
+        <!-- NO Column -->
+        <ng-container matColumnDef="no">
+          <th mat-header-cell *matHeaderCellDef class="px-4 py-2">No</th>
+          <td mat-cell *matCellDef="let element; let index = index" class="px-4 py-2">
+            {{ index + 1 }}
+          </td>
+        </ng-container>
+      
+        <!-- Project Name Column -->
+        <ng-container matColumnDef="projectName">
+          <th mat-header-cell *matHeaderCellDef class="px-4 py-2">Project Name</th>
+          <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.projectName }}</td>
+        </ng-container>
+      
+        <!-- API Name Column -->
+        <ng-container matColumnDef="apiName">
+          <th mat-header-cell *matHeaderCellDef class="px-4 py-2">API Name</th>
+          <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.name }}</td>
+        </ng-container>
+      
+        <!-- URL Column -->
+        <ng-container matColumnDef="apiUrl">
+          <th mat-header-cell *matHeaderCellDef class="px-4 py-2">URL</th>
+          <td mat-cell *matCellDef="let api" class="px-4 py-2">{{ api.url }}</td>
+        </ng-container>
+      
+        <!-- Action Buttons Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="px-4 py-2">Actions</th>
+          <td mat-cell *matCellDef="let api" class="px-4 py-2 flex space-x-2">
+            <button mat-icon-button (click)="onEdit(api)" title="Edit API" class="text-blue-500">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="onDownload(api)" title="Download API" class="text-red-500">
+              <mat-icon>download</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+      
+        <!-- Expanded Content Column -->
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let api" [attr.colspan]="displayedColumns.length">
+            <div class="example-element-detail" [@detailExpand]="api === expandedElement ? 'expanded' : 'collapsed'">
+              <div class="inner-table mat-elevation-z8" *ngIf="api.desc">
+                <table mat-table [dataSource]="api.desc">
+                  <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef>Description</th>
+                    <td mat-cell *matCellDef="let desc">{{ desc }}</td>
+                  </ng-container>
+                  <tr mat-header-row *matHeaderRowDef="['description']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['description'];"></tr>
+                </table>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+      
+        <!-- Table Header and Rows -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let api; columns: displayedColumns;" class="cursor-pointer" (click)="toggleRow(api)"></tr>
+        <tr mat-row *matRowDef="let api; columns: ['expandedDetail']" class="expanded-row"></tr>
+      </table>
+      
+  </mat-tab>
+</mat-tab-group>

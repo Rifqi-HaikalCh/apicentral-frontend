@@ -82,4 +82,77 @@
     display: flex;
     justify-content: space-between;
   }
-  
+  /* Styling untuk search bar */
+.search-bar {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.search-bar .mat-form-field-appearance-outline .mat-form-field-outline {
+  border-radius: 4px;
+}
+
+.search-bar .mat-form-field {
+  width: 100%;
+}
+
+.search-bar mat-icon-button {
+  margin-left: -40px; /* Atur sesuai kebutuhan untuk menghindari overlap dengan input */
+}
+.image-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 20px; /* Optional, jika ingin memberi jarak dari atas */
+}
+
+.centered-image {
+  max-width: 200px; /* Atur ukuran gambar sesuai kebutuhan */
+  width: 100%;
+  height: auto;
+}
+.modern-field {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mat-form-field-outline {
+  border-color: #4CAF50; /* Warna outline modern */
+}
+
+.mat-form-field-label {
+  color: #555; /* Warna label yang lebih lembut */
+  font-weight: 500; /* Sedikit lebih tebal untuk kesan modern */
+}
+
+.modern-input {
+  padding: 15px; /* Ruang padding yang lebih besar untuk kesan lebih luas */
+  font-size: 16px; /* Ukuran font yang sedikit lebih besar */
+}
+
+.mat-icon-button {
+  color: #4CAF50; /* Warna ikon yang modern dan serasi */
+  margin-right: -8px; /* Menghapus jarak ekstra pada sisi kanan */
+}
+.convert-button {
+  padding: 27px 10px; /* Ukuran padding yang lebih besar untuk tombol yang lebih nyaman */
+  font-size: 16px; /* Ukuran font yang lebih besar untuk keterbacaan yang lebih baik */
+  font-weight: 500; /* Font tebal untuk kesan tombol yang kuat dan jelas */
+  border-radius: 8px; /* Menambahkan radius untuk sudut yang lembut */
+  text-transform: uppercase; /* Mengubah teks menjadi huruf besar untuk kesan lebih modern */
+  letter-spacing: 1px; /* Sedikit jarak antar huruf untuk keterbacaan */
+  transition: background-color 0.3s ease; /* Animasi halus saat perubahan warna background */
+  margin-bottom: 3%;
+  margin-left: 3%;
+}
+
+.convert-button:hover {
+  background-color: #007fff;
+  color: #f5f5f5; /* Warna saat tombol di-hover untuk interaksi */
+}
+
+.convert-button:disabled {
+  background-color: #BDBDBD; /* Warna yang lebih lembut saat tombol dinonaktifkan */
+  color: #f5f5f5; /* Warna teks saat tombol dinonaktifkan */
+}

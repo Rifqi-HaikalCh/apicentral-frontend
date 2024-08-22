@@ -1,182 +1,145 @@
-import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, ElementRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
-import { TableService } from '../services/table.service';
-import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Api } from '../model-dto/api.model';
-import { Project } from '../model-dto/project.model';
+import { MatProgressBarModule } from '@angular/material/progress-bar'; 
+import { HttpClient } from '@angular/common/http';
+import { PostmanSwaggerService } from '../services/postman-swagger.service';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-postman-swagger',
   templateUrl: './postman-swagger.component.html',
-  styleUrls: ['./postman-swagger.component.css'],
-  animations: [
-    trigger('detailExpand', [
-      state('collapsed', style({ height: '0px', minHeight: '0' })),
-      state('expanded', style({ height: '*' })),
-      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
-    ]),
-  ],
+  styleUrls: ['./postman-swagger.component.css']
 })
 export class PostmanSwaggerComponent implements OnInit {
   @ViewChild('dialogTemplate') dialogTemplate!: TemplateRef<any>;
-  @ViewChild('deleteDialogTemplate') deleteDialogTemplate!: TemplateRef<any>;
+  @ViewChild('importDialogTemplate') importDialogTemplate!: TemplateRef<any>;
+  @ViewChild('fileInput') fileInput!: ElementRef;
+  @ViewChild('confirmDownloadTemplate') confirmDownloadTemplate!: TemplateRef<any>;
 
-  selectedApiForm: FormGroup;
-  dataSource: MatTableDataSource<Api>;
+  selectedApiForm!: FormGroup;
+  showProgressBar = false;
+  isNew = true;
+  selectedFile!: File;
+  expandedElement: any | null = null;
   displayedColumns: string[] = ['no', 'projectName', 'apiName', 'apiUrl', 'actions'];
-  expandedElement: Api | null = null;
-  isNew: boolean = true;
-  selectedFile: File | null = null;
-  selectedApiId: number | null = null;
-  selectedProjectId: number | null = null;
+  dataSource = new MatTableDataSource<any>([]);
+  jsonObject: any;
 
   constructor(
-    private dialog: MatDialog,
-    private formBuilder: FormBuilder,
-    private tableService: TableService
-  ) {
-    this.selectedApiForm = this.formBuilder.group({
+    public dialog: MatDialog,
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private postmanSwaggerService: PostmanSwaggerService // Inject the service
+  ) {}
+
+  ngOnInit(): void {
+    this.initializeForm();
+    // Fetch API data from backend and set to dataSource here
+  }
+
+  initializeForm(): void {
+    this.selectedApiForm = this.fb.group({
       projectName: ['', Validators.required],
       apiName: ['', Validators.required],
-      apiUrl: ['', Validators.required]
+      apiUrl: ['', Validators.required],
+      description: ['']
     });
-    this.dataSource = new MatTableDataSource<Api>([]);
   }
 
-  ngOnInit() {
-    this.loadApis();
-  }
-  
-  loadApis() {
-    this.tableService.getAllProjects().subscribe(
-        (projects: Project[]) => {
-            this.dataSource.data = projects.flatMap(project =>
-                project.apis.map(api => new Api(
-                    api.id,
-                    project.id,
-                    project.name,
-                    api.name,
-                    api.url,
-                    api.methods
-                ))
-            );
-        },
-        error => {
-            console.error('Error loading APIs:', error);
-        }
-    );
-}
-
-
-  openDialog(isNew: boolean, api?: Api) {
+  openDialog(isNew: boolean): void {
     this.isNew = isNew;
-    if (isNew) {
-      this.selectedApiForm.reset();
-      this.selectedApiForm.get('projectName')?.enable();
-      this.selectedFile = null;
-    } else if (api) {
-      this.selectedApiId = api.id;
-      this.selectedProjectId = api.projectId;
-      this.selectedApiForm.patchValue({
-        projectName: api.projectName,
-        apiName: api.name,
-        apiUrl: api.url
-      });
-      this.selectedApiForm.get('projectName')?.disable();
+    if (!isNew) {
+      const selectedApi = {}; // Retrieve and pass the selected API data for editing
+      this.selectedApiForm.patchValue(selectedApi);
     }
     this.dialog.open(this.dialogTemplate);
   }
 
-  closeDialog() {
+  onSave(): void {
+    if (this.isNew) {
+      console.log('Saving new API:', this.selectedApiForm.value);
+      // Implement the API call to save new API here
+    } else {
+      console.log('Updating API:', this.selectedApiForm.value);
+      // Implement the API call to update existing API here
+    }
+    this.closeDialog();
+  }
+
+  closeDialog(): void {
     this.dialog.closeAll();
+    this.selectedApiForm.reset();
   }
 
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
+  openImportDialog(): void {
+    this.dialog.open(this.importDialogTemplate);
+  }
+
+  onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (target.files && target.files.length > 0) {
+      this.selectedFile = target.files[0];
     }
   }
 
-  onSave() {
-    if (this.selectedApiForm.valid) {
-      const formData = this.selectedApiForm.value;
-      if (this.isNew && this.selectedFile) {
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          const jsonObject = JSON.parse(e.target.result);
-          this.tableService.createApi(this.selectedProjectId!, jsonObject).subscribe(
-            () => {
-              this.loadApis();
-              this.closeDialog();
-            },
-            error => {
-              console.error('Error importing Postman collection:', error);
-            }
-          );
-        };
-        reader.readAsText(this.selectedFile);
-      } else if (this.selectedApiId) {
-        this.tableService.updateApi(this.selectedProjectId!, this.selectedApiId, formData).subscribe(
-          () => {
-            this.loadApis();
-            this.closeDialog();
-          },
-          error => {
-            console.error('Error updating API:', error);
-          }
-        );
-      }
+  uploadFile(): void {
+    if (this.selectedFile) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const fileContent = e.target.result;
+        this.processFile(fileContent);
+      };
+      reader.readAsText(this.selectedFile);
     }
   }
 
-  onEdit(api: Api) {
-    this.openDialog(false, api);
-  }
+  processFile(fileContent: string): void {
+    const jsonObject = JSON.parse(fileContent);
+    this.showProgressBar = true;
 
-  onDownload(api: Api) {
-    const dialogRef = this.dialog.open(this.deleteDialogTemplate);
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tableService.getApi(api.projectId, api.id).subscribe(
-          jsonObject => {
-            this.downloadJson(jsonObject, `${api.name}.json`);
-          },
-          error => {
-            console.error('Error downloading API:', error);
-          }
-        );
+    this.postmanSwaggerService.convertPostmanJsonToSwagger(JSON.stringify(jsonObject)).subscribe(
+      (response: any) => {
+        console.log(response);
+        this.showProgressBar = false;
+        this.jsonObject = response;  // Save the response JSON for later use
+        this.showConfirmDownloadDialog();
+      },
+      (error: any) => {
+        console.error('Error converting Postman to Swagger', error);
+        this.showProgressBar = false;
       }
-    });
+    );
   }
 
-  downloadJson(jsonObject: any, filename: string) {
-    const blob = new Blob([JSON.stringify(jsonObject, null, 2)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.URL.revokeObjectURL(url);
+  showConfirmDownloadDialog(): void {
+    this.dialog.open(this.confirmDownloadTemplate);
   }
 
-  applyFilter(event: Event) {
+  downloadJson(): void {
+    const jsonBlob = new Blob([JSON.stringify(this.jsonObject, null, 2)], { type: 'application/json' });
+    saveAs(jsonBlob, 'swagger.json'); // Downloads the JSON file
+    this.closeDialog();
+  }
+
+  toggleRow(api: any): void {
+    this.expandedElement = this.expandedElement === api ? null : api;
+  }
+
+  applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
 
-  close(dialogRef: any) {
-    dialogRef.close();
+  onEdit(api: any): void {
+    this.openDialog(false);
+    this.selectedApiForm.patchValue(api);
   }
 
-  confirmDownload(dialogRef: any) {
-    dialogRef.close(true);
-  }
-
-  editMethod(method: any) {
-    // Implement method editing logic here
-    console.log('Editing method:', method);
+  onDownload(api: any): void {
+    this.dialog.open(this.confirmDownloadTemplate, {
+      data: { api }
+    });
   }
 }
